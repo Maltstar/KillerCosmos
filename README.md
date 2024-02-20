@@ -27,3 +27,6 @@ b- open the file index.html in a webbrowser (Firefox recommended)
 # credits
 
 Realized in collaboration with Juliette Gaubert
+
+# live demo
+https://maltstar.github.io/KillerCosmos/

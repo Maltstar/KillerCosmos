@@ -81,7 +81,7 @@ h1, .popup
     margin: 2rem auto;
     width: fit-content;
 }
- #start-stop, #sound-on{
+ #start-stop, #sound-on,#howto{
    
     text-align: center;
     padding: 2rem ; 
@@ -92,3 +92,17 @@ h1, .popup
     background: none;  
     text-shadow: 2px 2px 15px var(--color-2) ;
 }
+
+#start-stop:hover,#sound-on:hover {
+    background:#CC66FF;
+    color: var(--color-2);
+}
+
+@media screen and (max-width:1200px) {
+	
+    #canvas
+    {
+        max-width:auto;
+        height:auto;
+    }
+}   

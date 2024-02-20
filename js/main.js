@@ -6,15 +6,28 @@ function Game()
 
   //############## Anfang Variables Definieren ####################
 
+  // user sound setting
+  let sound_user_set = false;
 
   // Selektieren des Canvas
   let co = el('#canvas');
+
+  // Offscreen canevas für Rendering Optimierung
+  co.offscreenCanvas = document.createElement('canvas');
+  co.offscreenCanvas.width = co.width;
+  co.offscreenCanvas.height = co.height;
 
   // Kontext des Canvas extrahieren
   let ctx = co.getContext('2d');
 
 
-  let lifeCount, animate, tCode, index, FleatUFO, allSounds, cpt_sound, nivo; 
+  let lifeCount, animate, tCode, keysPressed,  index_UFO, FleatUFO, allSounds, cpt_sound_voice, cpt_sound_collision_satellite, cpt_sound_collision_planet, nivo, reinitUfoPosition, start_level, Nb_asteroids, Nb_satellites, Nb_planet; 
+  let game_won = false; 
+
+  // Initiale Anzahl von UFOs
+  Nb_asteroids = 20; 
+  Nb_satellites = 90;
+  Nb_planet = 60;
 
   //############## Ende Variables Definieren ####################
 
@@ -32,6 +45,7 @@ function Game()
       w   :30,   // Breite des Raumschiffs
       h   :30,  // Höhe des Raumschiffs
       speed: 7, // Geschwindigkeit auf  X Achse
+      inertie: false, // die Inertie der Raumschiff
 
       src : 'img/spacekraft1-01.png', // Bild für die Darstellung des Raumschiffes, @ Kollisionsraume passiert auf einem Quadrat nicht auf dem Spacecraft
 
@@ -40,16 +54,49 @@ function Game()
         this.y=190; 
         safeTakeoff(); 
         tCode=""; 
+
+      // Setze eine Inertie für den Raumschiff
+        console.log("nivo",nivo);
+        if(nivo == 2)
+        {
+          this.inertie = true;
+        }
         
       },
       // Setzt die Bewegungen des Raumschiffs
       move: function () {
         // ruf x und y position vor zeichnen
-
+        
         // Steuerung des Raumschiffsbewegungs nach links mit der Detektion des gedrückten Taste "ArrowLeft"
         // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
-          if (tCode === "ArrowLeft" && this.x > 0 ) 
+          // if (tCode === "ArrowLeft" && this.x > 0 ) 
+          // {
+          //   // Stop die Inertie nur für nivo 2
+          //   this.inertie = false;    
+          //   // Fahrt des Raumschiffes nach links mit angegebenen Geschwindigkeit
+          //   this.x -= this.speed;
+
+          //   // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die angegebene Geschwindigkeit
+          //   // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden   
+          //   if (this.x < this.speed)
+          //   {
+          //     this.x=0
+          //   };
+          
+          // };
+
+         if(nivo == 0 || nivo ==1)
+         {
+          this.inertie = false;
+         } 
+        console.log(keysPressed);
+        console.log("nivo",nivo);
+        // Steuerung des Raumschiffsbewegungs nach links mit der Detektion des gedrückten Taste "ArrowLeft"
+        // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowLeft" && !keysPressed['ArrowUp'] && !keysPressed['ArrowDown'] && this.x > 0 ) 
           {
+            // Stop die Inertie nur für nivo 2
+            this.inertie = false;    
             // Fahrt des Raumschiffes nach links mit angegebenen Geschwindigkeit
             this.x -= this.speed;
 
@@ -62,9 +109,62 @@ function Game()
           
           };
 
+        // Steuerung des Raumschiffsbewegungs nach links und oben mit der Detektion des gedrückten Taste "ArrowLeft"
+        // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+        if (tCode === "ArrowLeft" && keysPressed['ArrowUp'] && !keysPressed['ArrowDown'] && this.x > 0 ) 
+        {
+          // Stop die Inertie nur für nivo 2
+          //this.inertie = false;    
+          // Fahrt des Raumschiffes nach links und oben mit angegebenen Geschwindigkeit
+          this.x -= this.speed;
+          this.y -= this.speed;
+          // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die angegebene Geschwindigkeit
+          // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden   
+          if (this.x < this.speed)
+          {
+            this.x=0
+          };
+        
+        };
+
+
+        // Steuerung des Raumschiffsbewegungs nach links und unten mit der Detektion des gedrückten Taste "ArrowLeft"
+        // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+        if (tCode === "ArrowLeft" && !keysPressed['ArrowUp'] && keysPressed['ArrowDown'] && this.x > 0 ) 
+        {
+          // Stop die Inertie nur für nivo 2
+          //this.inertie = false;    
+          // Fahrt des Raumschiffes nach links und oben mit angegebenen Geschwindigkeit
+          this.x -= this.speed;
+          this.y += this.speed;
+          // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die angegebene Geschwindigkeit
+          // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden   
+          if (this.x < this.speed)
+          {
+            this.x=0
+          };
+        
+        };
+
+          // // Steuerung des Raumschiffsbewegung nach rechts mit der Detektion des gedrückten Taste "ArrowRight"
+          // // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          // if (tCode === "ArrowRight" && this.x < co.width - this.w ) 
+          // {
+          //   // Fahrt des Raumschiffes nach rechts mit angegebenen Geschwindigkeit
+          //   this.x += this.speed;
+
+          //   // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die Breite des Raumschiffsbewegung
+          //   // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden
+          //   if (this.x > co.width - this.w )
+          //   {
+          //     this.x = co.width - this.w;
+          //   };
+          // };
+
+
           // Steuerung des Raumschiffsbewegung nach rechts mit der Detektion des gedrückten Taste "ArrowRight"
           // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
-          if (tCode === "ArrowRight" && this.x < co.width - this.w ) 
+          if (tCode === "ArrowRight" && !keysPressed['ArrowUp'] && !keysPressed['ArrowDown'] && this.x < co.width - this.w ) 
           {
             // Fahrt des Raumschiffes nach rechts mit angegebenen Geschwindigkeit
             this.x += this.speed;
@@ -77,9 +177,60 @@ function Game()
             };
           };
 
+
+          // Steuerung des Raumschiffsbewegung nach rechts und oben mit der Detektion des gedrückten Taste "ArrowRight"
+          // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowRight" && keysPressed['ArrowUp'] && !keysPressed['ArrowDown'] && this.x < co.width - this.w ) 
+          {
+            // Fahrt des Raumschiffes nach rechts und oben mit angegebenen Geschwindigkeit
+            this.x += this.speed;
+            this.y -= this.speed;
+
+            // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die Breite des Raumschiffsbewegung
+            // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden
+            if (this.x > co.width - this.w )
+            {
+              this.x = co.width - this.w;
+            };
+          };
+
+
+          // Steuerung des Raumschiffsbewegung nach rechts und unten mit der Detektion des gedrückten Taste "ArrowRight"
+          // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowRight" && !keysPressed['ArrowUp'] && keysPressed['ArrowDown'] && this.x < co.width - this.w ) 
+          {
+            // Fahrt des Raumschiffes nach rechts und unten mit angegebenen Geschwindigkeit
+            this.x += this.speed;
+            this.y += this.speed;
+
+            // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die Breite des Raumschiffsbewegung
+            // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden
+            if (this.x > co.width - this.w )
+            {
+              this.x = co.width - this.w;
+            };
+          };
+
+          // // Steuerung des Raumschiffsbewegung nach oben mit der Detektion des gedrückten Taste "ArrowUp"
+          // // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          // if (tCode === "ArrowUp" && this.y >= 0)
+          // {
+          //   // Fahrt des Raumschiffes nach oben mit angegebenen Geschwindigkeit
+          //     this.y -= this.speed;
+
+          //   // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die angegebene Geschwindigkeit
+          //   // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden 
+          //     if (this.y < this.speed)
+          //     {
+          //       this.y=0;
+          //     };
+              
+          // };
+
+
           // Steuerung des Raumschiffsbewegung nach oben mit der Detektion des gedrückten Taste "ArrowUp"
           // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
-          if (tCode === "ArrowUp" && this.y >= 0)
+          if (tCode === "ArrowUp" && !keysPressed['ArrowLeft'] && !keysPressed['ArrowRight'] && this.y >= 0)
           {
             // Fahrt des Raumschiffes nach oben mit angegebenen Geschwindigkeit
               this.y -= this.speed;
@@ -93,9 +244,62 @@ function Game()
               
           };
 
+
+          // Steuerung des Raumschiffsbewegung nach oben und links mit der Detektion des gedrückten Taste "ArrowUp"
+          // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowUp" && keysPressed['ArrowLeft'] && !keysPressed['ArrowRight'] && this.y >= 0)
+          {
+            // Fahrt des Raumschiffes nach oben und links mit angegebenen Geschwindigkeit
+              this.y -= this.speed;
+              this.x -= this.speed;
+
+            // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die angegebene Geschwindigkeit
+            // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden 
+              if (this.y < this.speed)
+              {
+                this.y=0;
+              };
+              
+          };
+
+
+          // Steuerung des Raumschiffsbewegung nach oben und rechts mit der Detektion des gedrückten Taste "ArrowUp"
+          // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowUp" && !keysPressed['ArrowLeft'] && keysPressed['ArrowRight'] && this.y >= 0)
+          {
+            // Fahrt des Raumschiffes nach oben und rechts mit angegebenen Geschwindigkeit
+              this.y -= this.speed;
+              this.x += this.speed;
+
+            // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die angegebene Geschwindigkeit
+            // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden 
+              if (this.y < this.speed)
+              {
+                this.y=0;
+              };
+              
+          };
+
+          // // Steuerung des Raumschiffsbewegung nach unten mit der Detektion des gedrückten Taste "ArrowUp"
+          // // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          // if (tCode === "ArrowDown" && this.y < co.height - this.h) 
+          // {
+          //   // Fahrt des Raumschiffes nach unten mit angegebenen Geschwindigkeit
+          //     this.y += this.speed;
+
+          //     // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die Höhe des Raumschiffsbewegung
+          //     // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden
+          //     if (this.y > co.height- this.h )
+          //     {
+          //       this.y=co.height - this.h;
+          //     };
+            
+          // };
+
+
           // Steuerung des Raumschiffsbewegung nach unten mit der Detektion des gedrückten Taste "ArrowUp"
           // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
-          if (tCode === "ArrowDown" && this.y < co.height - this.h) 
+          if (tCode === "ArrowDown" && !keysPressed['ArrowLeft'] && !keysPressed['ArrowRight'] && this.y < co.height - this.h) 
           {
             // Fahrt des Raumschiffes nach unten mit angegebenen Geschwindigkeit
               this.y += this.speed;
@@ -108,9 +312,53 @@ function Game()
               };
             
           };
+
+
+          // Steuerung des Raumschiffsbewegung nach unten mit der Detektion des gedrückten Taste "ArrowUp"
+          // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowDown" && keysPressed['ArrowLeft'] && !keysPressed['ArrowRight'] && this.y < co.height - this.h) 
+          {
+            // Fahrt des Raumschiffes nach unten und links mit angegebenen Geschwindigkeit
+              this.y += this.speed;
+              this.x -= this.speed;
+
+              // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die Höhe des Raumschiffsbewegung
+              // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden
+              if (this.y > co.height- this.h )
+              {
+                this.y=co.height - this.h;
+              };
+            
+          };
+
+
+          // Steuerung des Raumschiffsbewegung nach unten mit der Detektion des gedrückten Taste "ArrowUp"
+          // Wenn das Raumschiff innerhalb des Canevas Rahmens liegt
+          if (tCode === "ArrowDown" && !keysPressed['ArrowLeft'] && keysPressed['ArrowRight'] && this.y < co.height - this.h) 
+          {
+            // Fahrt des Raumschiffes nach unten und rechts mit angegebenen Geschwindigkeit
+              this.y += this.speed;
+              this.x += this.speed;
+
+              // Wenn der Abstand zwichen Canevas Border und das Raumschiff ist kleiner als die Höhe des Raumschiffsbewegung
+              // Positionierung des Raumschiffs auf dem Canevas Border um Canvas Überschreitung zu Vermeidung zu vermeiden
+              if (this.y > co.height- this.h )
+              {
+                this.y=co.height - this.h;
+              };
+            
+          };
           
           this.draw();
           //console.log(this.y+this.h); 
+        },
+
+        set_inertie:function()
+        {
+          console.log("set_inertie");
+          // Fahrt des Raumschiffes nach links mit angegebenen Geschwindigkeit
+          this.x += this.speed;
+          console.log(this.x);
         },
         
       // Zeichnen des Raumschiffs auf dem Canevas
@@ -143,19 +391,23 @@ function Game()
           init  :function() // Intializatierung von verschieden Parametern
            {
             
-            //UFO fleat defined 
+            /* init of the index_UFO only when the level is starting not when there is a collision*/ 
+            if(reinitUfoPosition == false || start_level == true)
+            {
+              //UFO fleat defined 
+              FleatUFO[index_UFO]=this; 
+            
+              // Setzt Kennzeichnung des UFO
+              this.id = index_UFO;  
+            
+              // Aktualisierung des Indexes für den nächste UFO
+              index_UFO ++; 
+            }
 
-            FleatUFO[index]=this; 
-           
-            // Setzt Kennzeichnung des UFO
-            this.id = index;  
-           
-            // Aktualisierung des Indexes für den nächste UFO
-            index ++; 
 
            
             //Define the number of items in the fleat according to what's set up into level
-            FleatUFO.length=Level[nivo].Nb; 
+            //FleatUFO.length=Level[nivo].Nb; 
 
 
             //Define UFO 
@@ -163,7 +415,8 @@ function Game()
             this.x    = Math.floor(Math.random()* co.width);
             this.y    = Math.floor(Math.random()* co.height);
             
-            
+            console.log("FleatUFO");
+            console.log(FleatUFO);
             //Voraussetzungen für jeder UFO pro Level 
             chooseLevel(); 
             
@@ -261,7 +514,7 @@ function Game()
       title: "asteroide",
       background: "url('img/universe_blue.jpg')",
       spacecraft: 'img/aste.png',
-      Nb: 20,
+      Nb: Nb_asteroids,
       settings: function () {
         // Aufgaben, die gilten für alle UFO
         //asteroide fallen - richtung abwärt
@@ -282,7 +535,7 @@ function Game()
       title: 'satellite',
       background: "url('img/universe_earth.jpg')",
       spacecraft: 'img/spacekraft1-01.png',
-      Nb: 17,
+      Nb: Nb_satellites,
       settings: function () {
 
         FleatUFO.forEach(function (UFO) {
@@ -304,11 +557,12 @@ function Game()
 
       }
     },
+    /* Bug known: Sometimes the position of the planets do not allow to win at all to be corrected */
     {
       title: 'deathRay',
       background: "url('img/universe_rosa.jpg')",
       spacecraft: 'img/planet.png',
-      Nb: 20,
+      Nb: Nb_planet,
       settings: function () {
         
         FleatUFO.forEach(function (UFO) {
@@ -370,7 +624,14 @@ function Game()
 
         // Raumschiff am Ende des aktuellen Stufenspiel 
         if(kollisionRectRect (this, spaceShip))
-        { nivo++;
+        { 
+          // Einstellung der nächsten Stufenspiel
+          nivo++;
+
+          // Löschen von vorhandene UFO
+          klonCleaner()
+          // Löschen von gedrückten Tasture
+          erase_keypressed();
 
 
           
@@ -378,32 +639,55 @@ function Game()
           playSound(allSounds.others[0]); 
 
           //Gewinnt des Spiel - letzte Nivo gewinnt
-          if( (nivo+1) > Level.length){
-            alert(`You land safelly on the new Planet to colonize it. 
+          if( (nivo+1) > Level.length)
+          {
+            alert(`You land safely on the new Planet to colonize it. 
             Unfortunalty the atmosphere is not breathable. 
             You must continue to wander in the univers
             and maybe find a suitable planet and maybe rescue humanity. 
             `); 
+            //game_won = true;
+            // Schwierigkeitgrad erhöhen
+            Level[0].Nb = Level[0].Nb + 15;
+            Level[1].Nb = Level[1].Nb + 15;
+            Level[2].Nb = Level[2].Nb + 5;
             restart_game(); // restart the game 
-          }else{
-           //Nächsten Level
-          // Nachricht anzeigen
-          alert('Next Level');
-          // Music ändern;
-          setMusic(allSounds.music[nivo]);
-          playMusic();
-          console.log(nivo);
-
-          //Next Level zahlen 
-          // nivo count 10-02
           
-          //Level Counter 
-          tellNivo(); 
+          }
+          else
+          {
+            //Nächsten Level
+            // Nachricht anzeigen
+            alert('Next Level');
+            // Music ändern;
+            setMusic(allSounds.music[nivo]);
+            if(sound_user_set == true)
+            {
+              playMusic();
+            }
+            console.log(nivo);
 
-          //ruf normal die UFOs fonction
-          klonFabrik(Number(Level[nivo].Nb), UFO);
-          spaceShip.init(); 
-        }
+            //Next Level zahlen 
+            // nivo count 10-02
+            
+            //Level Counter 
+            tellNivo(); 
+
+            // Meldung eines neues Level
+            start_level = true;
+
+            // Löschen von gedrückten Tasture
+            //erase_keypressed();
+            
+            
+
+
+            //alert('Next Level');
+
+            //ruf normal die UFOs fonction (init)
+            klonFabrik(Number(Level[nivo].Nb), UFO);
+            spaceShip.init(); 
+          }
         
         }; 
         
@@ -437,10 +721,14 @@ function Game()
     lifeCount = 15; // Anzahl von Spieler Leben
     animate = false; // steuert die Animation
     tCode = false; // speichert die gedrückte Taste, hier taste "ArrowLeft","ArrowRight","ArrowUp", "ArrowDown"
-    index  = 0;  // Index für den FleatUFO
+    index_UFO  = 0;  // index_UFO für den FleatUFO
     FleatUFO = []; // Sammelung Array von Objecten für den aktuelle Spielstuffe
-    soundSwitch = false; // Muted Ton per Default
-    cpt_sound = 0; // Auswahl erste Tote Stimme
+    //soundSwitch = false; // Muted Ton per Default
+    reinitUfoPosition = false;
+    soundSwitch = sound_user_set;
+    cpt_sound_voice = 0; // Auswahl erste Tote Stimme
+    cpt_sound_collision_satellite = 3; // Auswahl erste Ton
+    cpt_sound_collision_planet = 5;
     allSounds =  // Stimme und  Musik Kollection
     {
       erfolg :"sound/death1.mp3",
@@ -461,16 +749,23 @@ function Game()
 
       others : ["sound/others/level_cleared.mp3",
                 "sound/others/spaceship_destroyed.mp3",
-                "sound/others/hit.mp3"]
+                "sound/others/hit_asteroid.mp3",
+                "sound/others/hit_satellite_33.mp3",
+                "sound/others/hit_satellite_47.mp3",
+                "sound/others/hit_planet_V04.mp3",
+                "sound/others/hit_planet_V05.mp3"
+              ]
       
     
 
     }
 
-   // Setzte die Anfang Parametern für die Musik
+   // Setzt die Anfang Parametern für die Musik
    music = new Audio();
    music.volume = 0.4;
    music.src = allSounds.music[0];
+   music.loop = true;
+
    
   }
 
@@ -499,11 +794,10 @@ function Game()
   // Spiel ein Ton
   function playMusic()
   { 
-    if(soundSwitch)
-    {   
-      music.play();      
-    }
+      music.play(); 
+      el("#sound-on").innerText = "Sound Off" ;
   }
+  /***** Ende playMusic() *******/
 
   // Setze einen Path zur Musik
   function setMusic(theme)
@@ -511,8 +805,16 @@ function Game()
     music.src = theme;
   }
 
-    
+   /***** Anfang pauseMusic() *******/ 
+   function pauseMusic()
+   {    
+     music.pause();
+     el("#sound-on").innerText = "Sound On" ;      
+   }
   /***** Ende pauseMusic() *******/
+
+    
+
 
 
   function chooseLevel    ()
@@ -532,12 +834,7 @@ function Game()
 };
 /***ende nivo */
 
- /***** Anfang pauseMusic() *******/ 
-  function pauseMusic()
-  {    
-    music.pause();      
-  }
- /***** Ende pauseMusic() *******/
+
 
   /***** Anfang Set_background_lvl1_css() *******/ 
   // Zeigt einen Background an
@@ -560,7 +857,25 @@ function Game()
         // der Start Zustand des Objektes setzen
         klon.init();     
     }; 
+
+    // neue Level wurde mit UFO eingestellet
+    start_level = false;
   };
+
+  function klonCleaner()
+  {
+    // Löscht alle UFOs des aktuellen Stufespiel für neue Fleat für nächste Stufespiel
+    for (let i=0;i<FleatUFO.length;i++)
+    {
+      delete FleatUFO[i];
+    }
+
+
+    FleatUFO = [];
+
+    // Restartet index für neue Fleat für nächste Stufespiel
+    index_UFO = 0;
+  }
 
    /***** Ende klonFabrik() *******/ 
 
@@ -591,18 +906,55 @@ function Game()
    let alert_message = "";
 
    // Auswahl einer Stimme
-   if(cpt_sound>allSounds.lost.length-1)
+   if(cpt_sound_voice>allSounds.lost.length-1)
    {
-     cpt_sound = 0;
+     cpt_sound_voice = 0;
    }
 
    // Rausmschiff Kollision spielen
-   playSound(allSounds.others[2]);
+   switch (nivo)
+   {
+      case 0: // Asteroid Kollision
+        playSound(allSounds.others[2]);
+        playSound(allSounds.others[2]);
+      break;
+
+      case 1: // Satellite Kollision
+        playSound(allSounds.others[cpt_sound_collision_satellite]);
+        playSound(allSounds.others[cpt_sound_collision_satellite]);
+        playSound(allSounds.others[cpt_sound_collision_satellite]);
+        playSound(allSounds.others[cpt_sound_collision_satellite]);
+        playSound(allSounds.others[cpt_sound_collision_satellite]);
+        playSound(allSounds.others[cpt_sound_collision_satellite]);
+        cpt_sound_collision_satellite ++;
+        if(cpt_sound_collision_satellite > 4)
+        { 
+          cpt_sound_collision_satellite = 3;
+        }
+        break;
+
+      case 2:
+        playSound(allSounds.others[cpt_sound_collision_planet]);
+        playSound(allSounds.others[cpt_sound_collision_planet]);
+        cpt_sound_collision_planet ++;
+        if(cpt_sound_collision_planet > 6)
+        { 
+          cpt_sound_collision_planet = 5;
+        }
+        break;
+
+      default:
+        playSound(allSounds.others[2]);
+        break;
+
+   }
+
+   
    // Stimme spielen
-   playSound(allSounds.lost[cpt_sound]);
+   playSound(allSounds.lost[cpt_sound_voice]);
 
    // Auswahl einer Stimme aktualiseren
-   cpt_sound++;
+   cpt_sound_voice++;
 
    // Pause 100 ms
    setTimeout(()=>{},100);
@@ -624,6 +976,14 @@ function Game()
      
      // Anzeiger einer Popup mit Nachricht
       alert(alert_message);
+      // Löschen von gedrückten Tasture
+      erase_keypressed();
+
+      game_won = false;
+        // Schwerigkeitsgrad reduzieren
+      Level[0].Nb = Nb_asteroids;
+      Level[1].Nb = Nb_satellites;
+      Level[2].Nb = Nb_planet;
       //Back to beginning of the Game 
       restart_game(); 
     
@@ -659,10 +1019,15 @@ function Game()
 // Sicherheit Gebiet drum herum das Raumschiff erstellen 
 function safeTakeoff()
 {
-  let max=Level[nivo].Nb; 
+  //let max=Level[nivo].Nb; 
+  let max = FleatUFO.length;
+
+  console.log("FleatUFO.length",FleatUFO.length);
+  // Achten, dass für jeden UFO, es kein Kollision mit dem Startposition des Raumschifes gibt
+  // Wenn, ja, neue Platzieren für den UFO
     for(let i=0; i < max; i++)
     {
-      FleatUFO[i].id=i; 
+      //FleatUFO[i].id=i; 
         //console.log(i); 
       if(kollisionRectRect (safeSpace, FleatUFO[i]))
       {
@@ -676,9 +1041,16 @@ function safeTakeoff()
 
 /******* Anfang reinitPosition() *********/ 
 // Setzte die Position von UFO außerhalb der sicheren Gebiet für das Raumschiff
+// wird aufgerufen, wenn die folgende Bedingungen auftretten:
+//  * einer Kollision mit einem UFO & Raumschiff ist aufgretten
+//  * der Raumschiff wird zur inital Start Position zurückgesetzt dann
+//  * innerhabl der SafeTakeoff Zone drum herum der Inital Position des Raumschiff, befindet sich einer UFO
+//
 
 function reinitPosition(Ufo)
 {
+  console.log("reinitPosition UFO");
+  reinitUfoPosition = true;
   Ufo.init();
   if(kollisionRectRect (safeSpace, UFO))
   {
@@ -693,6 +1065,13 @@ function reinitPosition(Ufo)
   function checkDown(e) 
   {
     tCode = e.key;
+    // Log nur gedrückte Taste für Bewegung
+    if(tCode == 'ArrowDown' || tCode == 'ArrowUp' || tCode == 'ArrowLeft' || tCode == 'ArrowRight')
+    {
+      // Setzen einen Flag für den gedrückte Taste
+      keysPressed[tCode] = true;
+    }
+    
     console.log(tCode);
     e.preventDefault(); // verbiete den Browser Anweisung zu empfangen
   }
@@ -700,12 +1079,32 @@ function reinitPosition(Ufo)
 
   /***** Anfang checkUp() *******/
   // Rücksetzung des gedrückten Taste
-  function checkUp() 
+  function checkUp(e) 
   {
-    tCode = false; 
+    tCode = e.key ;
+    if(tCode == 'ArrowDown' || tCode == 'ArrowUp' || tCode == 'ArrowLeft' || tCode== 'ArrowRight')
+    { 
+      keysPressed[e.key ] = false;
+    } 
+    tCode = false;
+    e.preventDefault(); // verbiete den Browser Anweisung zu empfangen
     
   }
   /***** Ende checkUp() *******/
+
+  function erase_keypressed()
+  {
+    
+    for (let key in keysPressed)
+    {
+      keysPressed[key] = false;
+    }
+
+    tCode = false;
+
+    console.log('erase_keypressed',keysPressed);
+  }
+
 
   /***** Anfang countlives() *******/
   // Aktualiziert der Anzeige von Leben
@@ -743,6 +1142,11 @@ function reinitPosition(Ufo)
   }; 
 
   
+
+  function pre_render()
+  {
+    ctx.drawImage(co.offscreenCanvas,0,0)
+  }
   /***** Anfang render() *******/
   // Animiert das Canvas
  function render()
@@ -755,7 +1159,12 @@ function reinitPosition(Ufo)
 
     // Zeichnen das Ende des Stufenspiel
     endLevel.init();
-       
+
+    //Addieren einer Inertie, gültig für Level 2
+    if(spaceShip.inertie == true)
+    {
+      spaceShip.set_inertie();
+    }  
     // Raumschiff bewegen
     spaceShip.move();
 
@@ -769,6 +1178,8 @@ function reinitPosition(Ufo)
 
     // Detektieren das Ende des Stufenspiel
     endLevel.init(); 
+
+    
   };
   /***** Ende render() *******/
 
@@ -786,6 +1197,12 @@ function reinitPosition(Ufo)
     tellNivo(); 
     //spaceship back to start position
     spaceShip.init(); 
+    // Musik spielen, wenn es vorher zu "on" gesetzt wurde
+    if(sound_user_set == true)
+    {
+      playMusic();
+    }
+    
    // endLevel.init(); //11-02
   }
 /***** Ende start_game() *******/
@@ -796,7 +1213,6 @@ function restart_game()
   pauseMusic();
   delete music;
   start_game();
-  //Set_background_lvl_css(Level[nivo].background); 
 }
 /***** Ende restart_game() *******/
 
@@ -804,14 +1220,14 @@ function restart_game()
 //############## Ende Funktionen Definieren ####################
 
   //########### KontrollFluss ###############/
-    start_game();
+  start_game();
     
   //############################/
   
 
 
   // Addieren das Detektion von Tasturereignis
-  // Note that
+  keysPressed = {};
   document.addEventListener('keydown',checkDown); // Druck auf einem Taste
   document.addEventListener('keyup',checkUp); // Release auf einem gedrückten Taste
 
@@ -824,11 +1240,13 @@ function restart_game()
       {
           // Start Animation
           render();
+          el('#start-stop').innerText = "Pause";
       }
       else
       {
           // Stop das Spiel
           cancelAnimationFrame(animate);
+          el('#start-stop').innerText = "Play";
       }
 
       // Rücksetzen der Animation
@@ -841,6 +1259,8 @@ function restart_game()
   {
       // Zustand Ton änern
       soundSwitch =! soundSwitch;
+      // Speichern der User Sound Zustand für den nächste Nivo oder wenn der Spiel restartet
+      sound_user_set = soundSwitch
 
       // Pause der Musik wenn Ton off ist
       if(!soundSwitch)

@@ -8,20 +8,28 @@
     <!-- Javascript can be embedded in head or body -->
     <!-- import css -->
     <link href="css/style.css" rel="stylesheet">
+    <link href="favicon.ico" rel="shortcut icon" type="image/x-icon">
 </head>
 <body>
     <div id="wrapper">
     <h1> Killer of the cosmos </h1>
     <div id="livescounter"></div> <div id="nivo"></div>
-    <canvas id = "canvas" width = "1200" height ="400"></canvas>
+    <canvas id = "canvas" width = "1200" height ="500" alt="canevas game area"></canvas>
     <div id="btn">
-        <button id = "start-stop">Spiel/Pause</button>
+        <button id = "start-stop">Start/Pause</button>
         <button id = "sound-on">Sound On</button>
     </div>
+    <div id="howto">
+        <p>How to play: </p> <br>
+        <ul> 
+            <li> Click on "Start" to launch the game </li>
+            <li> use the keys ⬅️ ⬆️ ⬇️ ➡️ to move and reach the end of the level by avoiding UFOs
+        </ul>
+    </div>
+
 </div>
     <!-- Javascript embedded as last element in body style="background: url('/img/universe_blue.jpg')"" -->
     <script src ="js/lib.js"></script>
-    
     <script src ="js/main.js"></script>
 
 </body>
